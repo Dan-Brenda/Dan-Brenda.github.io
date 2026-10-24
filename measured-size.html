@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Measured Size case study | Daniel Brenda</title>
+  <meta name="description" content="How Daniel Brenda specified, directed and shipped Measured Size: one bra size translated into 160+ brands' own labels.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="site-name" href="./">Daniel Brenda</a>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="./">Home</a></li>
+          <li><a href="measured-size.html" aria-current="page">Measured Size case study</a></li>
+          <li><a href="./#background">Background</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <p class="eyebrow">Case study</p>
+    <h1>Measured Size</h1>
+    <p class="lede">One recommended bra size, translated into the size labels that 160+ brands actually use.</p>
+    <p>Live on the Chrome Web Store, Firefox Add-ons and the App Store. It just launched and has a small number of early users. <a href="https://measuredsize.com">measuredsize.com</a></p>
+
+    <ul class="facts" aria-label="Key numbers">
+      <li><strong>160+</strong> <span>brands supported</span></li>
+      <li><strong>450+</strong> <span>scoped build phases</span></li>
+      <li><strong>12,500+</strong> <span>automated tests per release</span></li>
+      <li><strong>8.5M</strong> <span>answers replayed before release</span></li>
+    </ul>
+
+    <h2 id="problem">The problem</h2>
+    <p>Bra sizes don't carry over from brand to brand. A woman's usual size at one brand can be a size off at another, usually in the band or the cup. The band rides up or digs in, or the cup gaps or spills over. Then she either sends it back or wears a bra that doesn't fit.</p>
+    <p>I saw a gap in the market. No tool gave her the right size at whatever store she was shopping. I wanted one honest answer, in that brand's own size labels, right on the product page.</p>
+
+    <h2 id="built">What I built</h2>
+    <p>Measured Size takes a shopper's measurements, works out one recommended size, and translates it into each brand's own label. She sees the size to order at the brand she is looking at, instead of guessing from a generic chart.</p>
+    <ul>
+      <li><strong>Browser extension</strong>, live on the <a href="https://chromewebstore.google.com/detail/phffgakipjdnplpmkibfgnondilcfkpa">Chrome Web Store</a> (which also covers Edge and Brave) and <a href="https://addons.mozilla.org/en-US/firefox/addon/measured-size/">Firefox Add-ons</a> (desktop and Android). It shows her size right on the product page.</li>
+      <!-- TODO(Dan): add the App Store link once the listing URL is confirmed -->
+      <li><strong>iPhone and iPad app</strong>, live on the App Store.</li>
+      <li><strong>Public fit API and MCP server</strong> on Cloudflare Workers, so other developers and AI assistants can ask for a size at a given brand. <a href="https://measuredsize.com/how-it-works.html#api">API documentation</a>.</li>
+    </ul>
+
+    <h2 id="how">How I worked</h2>
+    <p>I ran Measured Size as the product manager and directed an AI coding agent, Claude Code, to do the implementation.</p>
+    <ul>
+      <li>I wrote every spec and every acceptance criterion.</li>
+      <li>I broke the work into 450+ scoped phases, each small enough to review on its own.</li>
+      <li>I reviewed every pull request before it merged.</li>
+      <li>I made every release decision.</li>
+    </ul>
+    <p>The agent wrote code fast. My job was to decide what should exist, define what "done" meant, and refuse anything that did not meet it.</p>
+
+    <h2 id="quality">The quality system</h2>
+    <p>A size recommendation is only useful if it is right, so every release is measured against four checks before it ships.</p>
+    <ul>
+      <li><strong>Retailer benchmark:</strong> recommendations checked against 296 real retailer listings and 11 sets of test measurements.</li>
+      <li><strong>Phone benchmark:</strong> 232 store listings, each read as an iPhone page and as a computer page across the same 11 sets of measurements, so a shopper on her phone gets the same answer she would on a computer.</li>
+      <li><strong>Regression replay:</strong> 8.5 million answers across 60 stores, replayed so any answer that changes is caught before release.</li>
+      <li><strong>Automated tests:</strong> 12,500+ tests that must all pass before each release.</li>
+    </ul>
+
+    <h2 id="privacy">Privacy</h2>
+    <p>Measured Size collects no personal data. Measurements stay on the shopper's device. There are no accounts, no tracking and no ads.</p>
+
+    <h2 id="learned">What I learned</h2>
+
+    <h3>Passing tests are not proof</h3>
+    <blockquote>
+      <p>"Build 94 passed every automated check, and my iPhone found the failure on Target within minutes. Our phone tests were Chrome pretending to be an iPhone, not Safari's engine. So I added a Safari-engine check to every release, and later a capture tool that turns real pages from my phone into tests, including stores that block test browsers."</p>
+    </blockquote>
+
+    <h3>The hardest call: always give an answer</h3>
+    <p>When a shopper fell between two of a brand's sizes, the card used to refuse and send her to the brand's size chart. I set a new rule: never point her to a chart, give her the answer. Now the card always picks a size. When it's a close call, it shows a lower rating and a plain reason, such as "M fits your cup; the band may feel a little loose."</p>
+    <p>The rule had a cost, and I measured it. On our test benchmark, the clickable rate (cards that name a size she can choose) on Amazon fell from 100.0% to 98.0%, and overall from 97.3% to 97.1%. The drop was 12 test cards on four Amazon listings, where the card used to name a size three cups away from hers. Under the new "within two steps" rule, it names none. I accepted that as the cost of not suggesting sizes that won't fit. In the same change, right size rose from 99.0% to 99.2% on our test benchmark.</p>
+
+    <h3>How to direct an AI coding agent</h3>
+    <ul>
+      <li>One phase, one concern, one pull request.</li>
+      <li>Every brief opens with "read the real files first," because the prompt is a summary, not the source.</li>
+      <li>Recompute every number fresh rather than trusting the last phase's.</li>
+      <li>Each phase reports back with questions, and I answer every one in writing before it merges.</li>
+      <li>Passing tests aren't proof. The real device is the deciding test.</li>
+    </ul>
+
+    <h3>What I'd do differently</h3>
+    <p>I'd set the "read the real files and the latest state first" rule from day one. Early sessions worked from my prompt alone. That rule is now how every session starts.</p>
+
+    <p><a href="./">Back to home</a></p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>&copy; 2026 Daniel Brenda</p>
+    </div>
+  </footer>
+</body>
+</html>
